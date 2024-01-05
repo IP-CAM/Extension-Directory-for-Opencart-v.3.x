@@ -25,8 +25,13 @@
           }
         }
         protected function createExtensionSymlinks() {
+          // delete log file
+          unlink(DIR_LOGS . "extension_symlinks.log");
+          $log = array();
+
           if (!function_exists('symlink')) {
             $this->error['warning'] = 'Fatal: symlink function is not available. Please enable it on your system.';
+            $log[] = $this->error['warning'];
             return !$this->error;
           }
 
@@ -38,6 +43,7 @@
 			      mkdir($root_dir . 'extension/', 0777);
           } elseif (count($extension_folders) == 0) {
             $this->error['warning'] = 'No extensions found in ' . $root_dir . 'extension/';
+            $log[] = $this->error['warning'];
           }
 
           // unsymlink everything
@@ -46,6 +52,8 @@
           $source_paths = array();
           $destination_paths = array();
           
+          if (!isset($this->error['warning'])) {
+
           foreach ($extension_folders as $directory) {
             $extension_name = basename($directory);
           
@@ -76,21 +84,16 @@
                 }
               }
             }
-          
-            if (isset($this->error['warning'])) {
-              unset($source_paths);
-              unset($destination_paths);
-              break; // Exit the main loop if flag is set
-            }
-          
+                  
             // if file install.xml exists
             if (is_file($directory . 'install.xml')) {
               $source_paths[$extension_name][] = $directory . 'install.xml';
             }
           }
-          
+          }
+
+
           if (!isset($this->error['warning'])) {
-                  
             foreach ($source_paths as $extension => $paths) {
               // Sort the paths by length in descending order to process deeper paths first
               usort($paths, function ($a, $b) {
@@ -134,13 +137,6 @@
               $source_paths[$extension] = $filtered_paths;
             }
             
-            // Output the filtered array
-
-            // delete log file
-            unlink(DIR_LOGS . "extension_symlinks.log");
-
-            $log = array();
-
             foreach ($source_paths as $extension => $paths) {
               $log[] = '----------------------------------------------------------------';
               $log[] = "Extension: $extension.\n\n Symlinking files:";
@@ -160,10 +156,11 @@
               }
             }
 
+          }		
           // Log
           $symlink_log = new Log('extension_symlinks.log');
           $symlink_log->write(implode("\n", $log));
-          }		
+
           return !$this->error;
         }
         ]]>
