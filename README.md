@@ -21,6 +21,6 @@ Sample directory structure:
 Notes:
 * `extension` directory will automatically be created on the first run if it does not exist.
 * Symlinks are regenerated when `marketplace/modification/refresh` is called (when modifications are refreshed).
-* Only extension folders with names ending in `.ocmod` will be accounted for. If you want to "disable" and extension, just add an underscore or something at the end of the folder name: `.ocmod_` and refresh modifications.
+* Only extension folders with names ending in `.ocmod` will be accounted for. If you want to "disable" an extension, just add an underscore or something at the end of the folder name: `.ocmod_` and refresh modifications.
 * Not guaranteed to work for all plugins.
 * In-production use not recommended.
