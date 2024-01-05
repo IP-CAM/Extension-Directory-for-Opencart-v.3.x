@@ -1,5 +1,5 @@
 # Extension Directory for Opencart 3
-A small extension to help organize extensions separately without altering core Opencart file & folder structure, enabling a clean and modular workspace for efficient development. Works by creating the least amount possible of symbolic links between the two directories.
+A small extension to help organize modules, themes, plugins, OCMODs of any kind separately without altering core Opencart file & folder structure, enabling a clean and modular workspace for efficient development. Works by creating the least amount possible of symbolic links between the two directories.
 
 Install either via `/system/` folder or by renaming it to install.xml, zipping to `opencart3-extension-directory.ocmod.zip` and uploading it.
 
