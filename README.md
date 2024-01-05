@@ -23,4 +23,5 @@ Notes:
 * Symlinks are regenerated when `marketplace/modification/refresh` is called (when modifications are refreshed).
 * Only extension folders with names ending in `.ocmod` will be accounted for. If you want to "disable" an extension, just add an underscore or something at the end of the folder name: `.ocmod_` and refresh modifications.
 * Not guaranteed to work for all plugins.
+* Will not work if the extension attempts to override a "native" file (i.e. the file already exists in the destination). AFAIK this is also default OpenCart behaviour.
 * In-production use not recommended.
