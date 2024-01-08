@@ -12,13 +12,16 @@
       </search>
       <add position="after">
         <![CDATA[
-		$dir_extension = str_replace('system/', '', DIR_SYSTEM) . 'extension';
-		$dir_root = str_replace('system/', '', DIR_SYSTEM);
-		shell_exec('find ' . $dir_root . ' -type l -exec rm -f {} \;');
-		shell_exec('cp -ans ' . $dir_extension . '/*.ocmod/upload/* ' . $dir_root);
-		shell_exec('for file in ' . $dir_extension . '/*.ocmod/install.xml; do cp -ans "$file" "' . DIR_SYSTEM . '$(basename "$(dirname "$file")").ocmod.xml"; done');
-        $new_symlinks_count = shell_exec('find ' . $dir_root . ' -type l | wc -l');
-        $symlinks_msg = ' (' . $new_symlinks_count . ' new symlinks created)';
+        if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
+            $dir_extension = str_replace('system/', '', DIR_SYSTEM) . 'extension';
+            $dir_root = str_replace('system/', '', DIR_SYSTEM);
+            shell_exec('[ -d "' . $dir_extension . '" ] || mkdir -p "' . $dir_extension . '"');
+            shell_exec('find ' . $dir_root . ' -type l -exec rm -f {} \;');
+            shell_exec('cp -ans ' . $dir_extension . '/*.ocmod/upload/* ' . $dir_root);
+            shell_exec('for file in ' . $dir_extension . '/*.ocmod/install.xml; do cp -ans "$file" "' . DIR_SYSTEM . '$(basename "$(dirname "$file")").ocmod.xml"; done');
+            $new_symlinks_count = shell_exec('find ' . $dir_root . ' -type l | wc -l');
+            $symlinks_msg = ' (' . $new_symlinks_count . ' new symlinks created)';
+        }
         ]]>
       </add>
     </operation>
@@ -38,9 +41,11 @@
       </search>
       <add position="after">
         <![CDATA[
-		$dir_root = str_replace('system/', '', DIR_SYSTEM);
-		shell_exec('find ' . $dir_root . ' -type l -exec rm -f {} \;');
-        $symlinks_msg = ' (all symlinks removed)';
+        if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
+            $dir_root = str_replace('system/', '', DIR_SYSTEM);
+            shell_exec('find ' . $dir_root . ' -type l -exec rm -f {} \;');
+            $symlinks_msg = ' (all symlinks removed)';
+        }
         ]]>
       </add>
     </operation>
