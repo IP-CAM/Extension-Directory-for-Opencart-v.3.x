@@ -8,216 +8,39 @@
   <file path="admin/controller/marketplace/modification.php">
     <operation>
       <search regex="false">
-        <![CDATA[protected function validate() {]]>
-      </search>
-      <add position="before">
-        <![CDATA[
-        protected function deleteSymbolicLinks($directory) {
-          $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::CHILD_FIRST
-          );
-        
-          foreach ($iterator as $item) {
-            if ($item->isLink()) {
-              unlink($item->getPathname());
-            }
-          }
-        }
-        protected function createExtensionSymlinks() {
-          // delete log file
-          unlink(DIR_LOGS . "extension_symlinks.log");
-          $log = array();
-
-          if (!function_exists('symlink')) {
-            $this->error['warning'] = 'Fatal: symlink function is not available. Please enable it on your system.';
-            $log[] = $this->error['warning'];
-            return !$this->error;
-          }
-
-          // remove 'catalog' from DIR_CATALOG
-          $root_dir = substr(DIR_CATALOG, 0, -8);
-          $extension_folders = glob($root_dir . 'extension/*.ocmod/', GLOB_ONLYDIR);
-
-          if (!is_dir($root_dir . 'extension/')) {
-			      mkdir($root_dir . 'extension/', 0777);
-          } elseif (count($extension_folders) == 0) {
-            $this->error['warning'] = 'No extensions found in ' . $root_dir . 'extension/';
-            $log[] = $this->error['warning'];
-          }
-
-          // unsymlink everything
-		      $this->deleteSymbolicLinks($root_dir);
-
-          $source_paths = array();
-          $destination_paths = array();
-          
-          if (!isset($this->error['warning'])) {
-
-          foreach ($extension_folders as $directory) {
-            $extension_name = basename($directory);
-          
-            if (is_dir($directory . 'upload/')) {
-              $path = array($directory . 'upload/*');
-          
-              while (count($path) != 0) {
-                $next = array_shift($path);
-          
-                foreach ((array)glob($next) as $file) {
-                  if (is_dir($file)) {
-                    $path[] = $file . '/*';
-                  }
-          
-                  $source_path = $file;
-                  $destination_path = explode('/extension/', $file, 2)[0] . '/' . explode('/upload/', $file, 2)[1];
-          
-                  // if is_dir 
-                  if (is_dir($destination_path)) {
-                    // do nothing
-                  } elseif (is_file($destination_path) && !is_link($destination_path)) {
-                    $this->error['warning'] = "Fatal: File $source_path already exists in $destination_path\n";
-                    break 2; // Exit both foreach loops
-                  } else {
-                    $source_paths[$extension_name][] = $source_path;
-                    $destination_paths[$extension_name][] = $destination_path;
-                  }
-                }
-              }
-            }
-                  
-            // if file install.xml exists
-            if (is_file($directory . 'install.xml')) {
-              $source_paths[$extension_name][] = $directory . 'install.xml';
-            }
-          }
-          }
-
-
-          if (!isset($this->error['warning'])) {
-            foreach ($source_paths as $extension => $paths) {
-              // Sort the paths by length in descending order to process deeper paths first
-              usort($paths, function ($a, $b) {
-                return strlen($b) - strlen($a);
-              });
-            
-              $filtered_paths = [];
-            
-              foreach ($paths as $path) {
-                $keep_path = true;
-                foreach ($filtered_paths as $filtered_path) {
-                  if (strpos($path, $filtered_path) === 0) {
-                    // If the path is a subdirectory of any existing filtered path, skip it
-                    $keep_path = false;
-                    break;
-                  }
-                }
-                if ($keep_path) {
-                  $filtered_paths = array_filter($filtered_paths, function ($filtered_path) use ($path) {
-                    $pathSegments = explode('/', rtrim($path, '/'));
-                    $filtered_segments = explode('/', rtrim($filtered_path, '/'));
-            
-                    $match = true;
-            
-                    foreach ($pathSegments as $index => $segment) {
-                      if (!isset($filtered_segments[$index]) || $filtered_segments[$index] !== $segment) {
-                        $match = false;
-                        break;
-                      }
-                    }
-            
-                    return !$match;
-                  });
-                  
-                  $filtered_paths[] = $path;
-                }
-            
-              }
-            
-              // Replace the paths for this extension with the filtered paths
-              $source_paths[$extension] = $filtered_paths;
-            }
-            
-            foreach ($source_paths as $extension => $paths) {
-              $log[] = '----------------------------------------------------------------';
-              $log[] = "Extension: $extension.\n\n Symlinking files:";
-              foreach ($paths as $path) {
-                if (strpos($path, 'upload/') !== false) {
-                  $destination = explode('/extension/', $path, 2)[0] . '/' . explode('/upload/', $path, 2)[1];
-                } elseif (strpos(basename($path), 'install.xml') !== false) {
-                  $destination = DIR_SYSTEM . $extension . '.xml';
-                }
-                if(file_exists($destination)) {
-                  if(is_link($destination)) {
-                    unlink($destination);
-                  }
-                }
-                @symlink($path, $destination);
-                $log[] = "$path <> $destination";
-              }
-            }
-
-          }		
-          // Log
-          $symlink_log = new Log('extension_symlinks.log');
-          $symlink_log->write(implode("\n", $log));
-
-          return !$this->error;
-        }
-        ]]>
-      </add>
-    </operation>
-    <operation>
-      <search regex="false">
-        <![CDATA[protected function getList() {]]>
-      </search>
-      <add position="replace">
-        <![CDATA[protected function getList() {
-          $data['tab_extension_symlinks_log'] = 'Symlinks log';
-
-          // Logs
-          $extension_symlinks_log = DIR_LOGS . 'extension_symlinks.log';
-
-          if (file_exists($extension_symlinks_log)) {
-            $data['extension_symlinks_log'] = htmlentities(file_get_contents($extension_symlinks_log, FILE_USE_INCLUDE_PATH, null));
-          } else {
-            $data['extension_symlinks_log'] = '';
-          }
-          ]]>
-      </add>
-    </operation>
-    <operation>
-      <search regex="false">
         <![CDATA[public function refresh($data = array()) {]]>
       </search>
-      <add position="replace">
+      <add position="after">
         <![CDATA[
-        public function refresh($data = array()) {
-        $this->createExtensionSymlinks();
+		$dir_extension = str_replace('system/', '', DIR_SYSTEM) . 'extension';
+		$dir_root = str_replace('system/', '', DIR_SYSTEM);
+		shell_exec('find ' . $dir_root . ' -type l -exec rm -f {} \;');
+		shell_exec('cp -ans ' . $dir_extension . '/*.ocmod/upload/* ' . $dir_root);
+		shell_exec('for file in ' . $dir_extension . '/*.ocmod/install.xml; do cp -ans "$file" "' . DIR_SYSTEM . '$(basename "$(dirname "$file")").ocmod.xml"; done');
+        $new_symlinks_count = shell_exec('find ' . $dir_root . ' -type l | wc -l');
+        $symlinks_msg = ' (' . $new_symlinks_count . ' new symlinks created)';
         ]]>
       </add>
     </operation>
-  </file>
-
-  <file path="admin/view/template/marketplace/modification.twig">
     <operation>
       <search regex="false">
-        <![CDATA[<li><a href="#tab-log" data-toggle="tab">{{ tab_log }}</a></li>]]>
+        <![CDATA[$this->language->get('text_success');]]>
       </search>
-      <add position="after">
-        <![CDATA[<li><a href="#tab-extension-symlinks-log" data-toggle="tab">Symlink Logs</a></li>]]>
+      <add position="replace">
+        <![CDATA[
+        $this->language->get('text_success') . (isset($symlinks_msg) ? $symlinks_msg : '');
+        ]]>
       </add>
     </operation>
     <operation>
       <search regex="false">
-        <![CDATA[<div class="tab-pane" id="tab-log">]]>
+        <![CDATA[public function clear() {]]>
       </search>
-      <add position="before">
+      <add position="after">
         <![CDATA[
-          <div class="tab-pane" id="tab-extension-symlinks-log">
-            <p>
-              <textarea wrap="off" rows="15" class="form-control">{{ extension_symlinks_log }}</textarea>
-            </p>
-          </div>
+		$dir_root = str_replace('system/', '', DIR_SYSTEM);
+		shell_exec('find ' . $dir_root . ' -type l -exec rm -f {} \;');
+        $symlinks_msg = ' (all symlinks removed)';
         ]]>
       </add>
     </operation>
