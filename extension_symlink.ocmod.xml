@@ -17,8 +17,9 @@
             $dir_root = str_replace('system/', '', DIR_SYSTEM);
             // Create extension directory if not exists
             shell_exec('[ -d "' . $dir_extension . '" ] || mkdir -p "' . $dir_extension . '"');
-
-            // Remove old symlinks and empty directories
+			shell_exec('echo "This directory is used by symlink extension. Please unzip your OCMODs here, and preserve the *.ocmod at the end of the directory name." > "' . $dir_extension . '/readme.txt"');            
+            
+			// Remove old symlinks and empty directories
             shell_exec('find ' . $dir_root . ' -type l -exec rm -f {} \;');
             shell_exec('find ' . $dir_root . ' -type d -empty -delete');
 
@@ -26,7 +27,7 @@
             shell_exec('cp -ans ' . $dir_extension . '/*.ocmod/upload/* ' . $dir_root);
             shell_exec('for file in ' . $dir_extension . '/*.ocmod/install.xml; do cp -ans "$file" "' . DIR_SYSTEM . '$(basename "$(dirname "$file")").ocmod.xml"; done');
             $new_symlinks_count = shell_exec('find ' . $dir_root . ' -type l | wc -l');
-            $symlinks_msg = ' (also ' . $new_symlinks_count . ' new symlinks created)';
+            $symlinks_msg = " (Also $new_symlinks_count new symlinks created)";
         }
         ]]>
       </add>
